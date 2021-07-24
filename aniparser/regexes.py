@@ -18,7 +18,7 @@ __all__ = (
 )
 
 EPISODE_REGEX = re.compile(
-    r"(?:[^a-z0-9()\[\]])(s(?P<season>\d+))?((e|sp|ep)|(?P<season2>\d+)x)?(?P<episode>\d+)(?![a-uw-z0-9()])[.\-]*",
+    r"(?:[^a-z0-9()\[\]])(s(?P<season>\d+))?((e|sp|ep)|(?P<season2>\d+)x)?(?P<episode>\d+)(?![a-uw-z0-9()\-])[.\-]*",
     flags=re.IGNORECASE,
 )
 RESOLUTION_REGEX = re.compile(
