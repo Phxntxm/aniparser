@@ -227,8 +227,8 @@ def _parse(path: Path) -> Dict[str, Any]:
                 )
                 # Since we're trying to find a difference between an anime title and an
                 # episode total... they should be *quite* different. It should be safe
-                # lowering this to below 70
-                < 70
+                # lowering this to below 60
+                < 60
             ):
                 data["episode_title"] = data["anime_title"]
                 data["anime_title"] = path_data["anime_title"]
