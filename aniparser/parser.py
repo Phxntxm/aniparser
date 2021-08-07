@@ -57,6 +57,7 @@ parsers_step_2: List[ParserType] = [
         "regex": EPISODE_REGEX,
         "groups": {"episode": "episode", "season": "season", "season2": "season"},
     },
+    {"regex": SEASON_REGEX, "groups": {"season": "season"}},
     {"regex": RELEASE_GROUP_REGEX, "groups": {"release_group": "release_group"}},
 ]
 
@@ -168,6 +169,11 @@ def _parse_string(name: str) -> Dict[str, Any]:
     name_to_parse = re.sub(r"[\[\]]", "", name_to_parse)
     # Now remove some stuff that could be left at the end
     name_to_parse = re.sub(r" *[\-\+]+$", "", name_to_parse)
+
+    # Special handling for an alternate title
+    name_to_parse = ALTERNATE_TITLE_REGEX.sub(
+        replace_and_track({"alternate_title": "alternate_title"}), name_to_parse
+    )
     # Now try to split between the anime title and the episode title
     titles = [
         t
@@ -201,37 +207,51 @@ def _parse(path: Path) -> Dict[str, Any]:
     extension = path.suffix[1:]
 
     data: Dict[str, Any] = {"file_name": str(path.absolute()), "extension": extension}
+    path_data: Dict[str, Any] = {}
 
     # First try to get the data from the file
     file_data = _parse_string(path.name)
     data.update(file_data)
+    # Now get the data from the path
+    path_data = _parse_string(path.parent.name)
 
     # Now if there is only an anime title but not an episode title, it's possible that
     # this is actually the episode title... and the anime title is in the folder name
     if "anime_title" in file_data and "episode_title" not in file_data:
-        path_data = _parse_string(path.parent.name)
+        # If we have the anime title, and the alternate title... then it's likely that this is
+        # just correct as is and we don't want to do anything extra
+        if "alternate_title" not in data:
+            # Special check to handle common folder names that might be general
+            # containers that we want to ignore
+            if path_data and path_data["anime_title"].lower() not in [
+                "anime",
+                "videos",
+                "torrents",
+                "downloads",
+                "documents",
+            ]:
+                # Now check if they differ, if they do combine
+                if (
+                    fuzz.ratio(
+                        file_data["anime_title"],
+                        path_data["anime_title"],
+                        processor=True,
+                    )
+                    # Since we're trying to find a difference between an anime title and an
+                    # episode total... they should be *quite* different. It should be safe
+                    # lowering this to below 60
+                    < 60
+                ):
+                    data["episode_title"] = data["anime_title"]
+                    data["anime_title"] = path_data["anime_title"]
 
-        # Special check to handle common folder names that might be general
-        # containers that we want to ignore
-        if path_data["anime_title"].lower() not in [
-            "anime",
-            "videos",
-            "torrents",
-            "downloads",
-            "documents",
-        ]:
-            # Now check if they differ, if they do combine
-            if (
-                fuzz.ratio(
-                    file_data["anime_title"], path_data["anime_title"], processor=True
-                )
-                # Since we're trying to find a difference between an anime title and an
-                # episode total... they should be *quite* different. It should be safe
-                # lowering this to below 60
-                < 60
-            ):
-                data["episode_title"] = data["anime_title"]
-                data["anime_title"] = path_data["anime_title"]
+    # We're going to combine the dicts for all the data, so remove the
+    # titles from the path data
+    path_data.pop("anime_title", None)
+    path_data.pop("episode_title", None)
+    # Now combine into path_data (so data ends up being most of our source of truth)
+    path_data.update(data)
+    data = path_data
 
     # Add a nice bool checking if we think this is an actual anime
     data["is_anime"] = "anime_title" in data and (

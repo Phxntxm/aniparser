@@ -76,6 +76,7 @@ video_terms = [
     "RMVB",
     r"[HL]Q",
     r"[HS]D",
+    r"multi-?subs",
 ]
 source_terms = [
     r"BD(RIP)*?",
