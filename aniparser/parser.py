@@ -54,9 +54,10 @@ parsers_step_1: List[ParserType] = [
 # Step 2 parsing, happens after getting bracketed data
 parsers_step_2: List[ParserType] = [
     {
-        "regex": EPISODE_REGEX,
-        "groups": {"episode": "episode", "season": "season", "season2": "season"},
+        "regex": EPISODE_SEASON_REGEX,
+        "groups": {"episode": "episode", "season": "season"},
     },
+    {"regex": EPISODE_REGEX, "groups": {"episode": "episode"}},
     {"regex": SEASON_REGEX, "groups": {"season": "season"}},
     {"regex": RELEASE_GROUP_REGEX, "groups": {"release_group": "release_group"}},
 ]

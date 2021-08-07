@@ -3,6 +3,7 @@ import re
 from aniparser.constants import audio_terms, video_terms, source_terms
 
 __all__ = (
+    "EPISODE_SEASON_REGEX",
     "EPISODE_REGEX",
     "SEASON_REGEX",
     "RESOLUTION_REGEX",
@@ -19,12 +20,17 @@ __all__ = (
     "ALTERNATE_TITLE_REGEX",
 )
 
+# Unfortunately there's too many combinations that can fuck up with titles too
+# we need to handle episodes/seasons in steps
+EPISODE_SEASON_REGEX = re.compile(
+    r"s?(?P<season>\d+)(e|ep|sp|x)(?P<episode>\d+)", flags=re.IGNORECASE
+)
 EPISODE_REGEX = re.compile(
-    r"(?:[^a-z0-9()\[\]])(s(?P<season>\d+))?((e|sp|ep)|(?P<season2>\d+)x)?(?P<episode>\d+)(?![a-uw-z0-9()\-])[.\-]*",
+    r" e?(?P<episode>\d+) ",
     flags=re.IGNORECASE,
 )
-# Sometimes the season is by itself
 SEASON_REGEX = re.compile(r"\(?Season (?P<season>\d+)\)", flags=re.IGNORECASE)
+
 RESOLUTION_REGEX = re.compile(
     r"(?P<pos_height>\d{3,4})([p]|[x\u00D7](?P<height>\d{3,4}))|\[(?P<alone_height>\d{3,4})\]",
     flags=re.IGNORECASE,
