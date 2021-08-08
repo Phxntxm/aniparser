@@ -53,11 +53,11 @@ parsers_step_1: List[ParserType] = [
 
 # Step 2 parsing, happens after getting bracketed data
 parsers_step_2: List[ParserType] = [
-    {"regex": SEASON_REGEX, "groups": {"season": "season"}},
     {
         "regex": EPISODE_SEASON_REGEX,
         "groups": {"episode": "episode", "season": "season"},
     },
+    {"regex": SEASON_REGEX, "groups": {"season": "season"}},
     {"regex": EPISODE_REGEX, "groups": {"episode": "episode"}},
     {"regex": RELEASE_GROUP_REGEX, "groups": {"release_group": "release_group"}},
 ]
@@ -221,15 +221,12 @@ def _parse(path: Path) -> Dict[str, Any]:
     file_data = file_data.copy()
     path_data = path_data.copy()
 
-    # Update our data with the file data
-    data.update(file_data)
-
     # Now if there is only an anime title but not an episode title, it's possible that
     # this is actually the episode title... and the anime title is in the folder name
     if "anime_title" in file_data and "episode_title" not in file_data:
         # If we have the anime title, and the alternate title... then it's likely that this is
         # just correct as is and we don't want to do anything extra
-        if "alternate_title" not in data:
+        if "alternate_title" not in file_data:
             # Special check to handle common folder names that might be general
             # containers that we want to ignore
             if path_data and path_data["anime_title"].lower() not in [
