@@ -29,7 +29,7 @@ EPISODE_REGEX = re.compile(
     r"(\/| )e?(?P<episode>\d+)( |\.)?",
     flags=re.IGNORECASE,
 )
-SEASON_REGEX = re.compile(r"\(?Season (?P<season>\d+)\)", flags=re.IGNORECASE)
+SEASON_REGEX = re.compile(r"\(?(Season| s) ?(?P<season>\d+)\)?", flags=re.IGNORECASE)
 
 RESOLUTION_REGEX = re.compile(
     r"(?P<pos_height>\d{3,4})([p]|[x\u00D7](?P<height>\d{3,4}))|\[(?P<alone_height>\d{3,4})\]",
