@@ -53,12 +53,12 @@ parsers_step_1: List[ParserType] = [
 
 # Step 2 parsing, happens after getting bracketed data
 parsers_step_2: List[ParserType] = [
+    {"regex": SEASON_REGEX, "groups": {"season": "season"}},
     {
         "regex": EPISODE_SEASON_REGEX,
         "groups": {"episode": "episode", "season": "season"},
     },
     {"regex": EPISODE_REGEX, "groups": {"episode": "episode"}},
-    {"regex": SEASON_REGEX, "groups": {"season": "season"}},
     {"regex": RELEASE_GROUP_REGEX, "groups": {"release_group": "release_group"}},
 ]
 
@@ -208,13 +208,19 @@ def _parse(path: Path) -> Dict[str, Any]:
     extension = path.suffix[1:]
 
     data: Dict[str, Any] = {"file_name": str(path.absolute()), "extension": extension}
-    path_data: Dict[str, Any] = {}
 
     # First try to get the data from the file
     file_data = _parse_string(path.name)
-    data.update(file_data)
     # Now get the data from the path
     path_data = _parse_string(path.parent.name)
+
+    # lru_cache is naive and does not handle mutable objects smartly, I need to do copies myself
+    # just to save situations that these get modified
+    file_data = file_data.copy()
+    path_data = path_data.copy()
+
+    # Update our data with the file data
+    data.update(file_data)
 
     # Now if there is only an anime title but not an episode title, it's possible that
     # this is actually the episode title... and the anime title is in the folder name
@@ -243,16 +249,17 @@ def _parse(path: Path) -> Dict[str, Any]:
                     # lowering this to below 60
                     < 60
                 ):
-                    data["episode_title"] = data["anime_title"]
-                    data["anime_title"] = path_data["anime_title"]
+                    file_data["episode_title"] = file_data["anime_title"]
+                    file_data["anime_title"] = path_data["anime_title"]
 
     # We're going to combine the dicts for all the data, so remove the
     # titles from the path data
     path_data.pop("anime_title", None)
     path_data.pop("episode_title", None)
-    # Now combine into path_data (so data ends up being most of our source of truth)
-    path_data.update(data)
-    data = path_data
+    # Now add the path data to our data source
+    data.update(path_data)
+    # File data second because that should be the main source of info
+    data.update(file_data)
 
     # Add a nice bool checking if we think this is an actual anime
     data["is_anime"] = "anime_title" in data and (
