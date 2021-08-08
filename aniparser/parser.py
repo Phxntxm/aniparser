@@ -170,6 +170,8 @@ def _parse_string(name: str) -> Dict[str, Any]:
     name_to_parse = re.sub(r"[\[\]]", "", name_to_parse)
     # Now remove some stuff that could be left at the end
     name_to_parse = re.sub(r" *[\-\+]+$", "", name_to_parse)
+    # And the beginning
+    name_to_parse = re.sub(r"^ *[\-\+]+ *", "", name_to_parse)
 
     # Special handling for an alternate title
     name_to_parse = ALTERNATE_TITLE_REGEX.sub(
@@ -266,5 +268,9 @@ def _parse(path: Path) -> Dict[str, Any]:
         data.get("extension") in video_file_extensions
         or data.get("extension") in subtitle_file_extensions
     )
+
+    # Now just to make sure the alternate title and main title aren't the same
+    if data.get("alternate_title") == data["anime_title"]:
+        data.pop("alternate_title", None)
 
     return data
