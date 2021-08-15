@@ -99,11 +99,11 @@ def _parse_string(name: str) -> Dict[str, Any]:
     """Takes a particlar string and uses a bunch
     of regex to pull anime data from it"""
 
-    # Add a / to the front, this helps handle the regexes that can match at the beginning
+    # Add a / to the front and back, this helps handle the regexes that can match at the beginning
     # a few regexes have a negative lookbehind, but that fails at the *start* of the line
     # As far as I know there's no "start of string, or negative lookbehind" in regex, so this
     # is our solution
-    name_to_parse = "/" + EXTENSION_REGEX.sub("", name)
+    name_to_parse = f"/{EXTENSION_REGEX.sub('', name)}/"
 
     # This is going to be our data we modify through the function that gets returned
     data: Dict[str, Any] = {}
@@ -164,6 +164,8 @@ def _parse_string(name: str) -> Dict[str, Any]:
 
     # Strip off the preceeding / we added
     name_to_parse = re.sub("^/ *", "", name_to_parse)
+    # And the trailing
+    name_to_parse = re.sub(" */$", "", name_to_parse)
     # At this point replace _ with space
     name_to_parse = re.sub("_+", " ", name_to_parse)
     # Now remove ALL brackets
@@ -243,10 +245,7 @@ def _parse(path: Path) -> Dict[str, Any]:
                         path_data["anime_title"],
                         processor=True,
                     )
-                    # Since we're trying to find a difference between an anime title and an
-                    # episode total... they should be *quite* different. It should be safe
-                    # lowering this to below 60
-                    < 60
+                    < 80
                 ):
                     file_data["episode_title"] = file_data["anime_title"]
                     file_data["anime_title"] = path_data["anime_title"]
