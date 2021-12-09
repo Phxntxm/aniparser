@@ -169,7 +169,7 @@ def _parse_string(name: str) -> Dict[str, Any]:
     # At this point replace _ with space
     name_to_parse = re.sub("_+", " ", name_to_parse)
     # Remove bracketed terms
-    name_to_parse = re.sub("\[.*?\]", "", name_to_parse)
+    name_to_parse = re.sub(r"\[.*?\]", "", name_to_parse)
     # Now remove ALL brackets
     name_to_parse = re.sub(r"[\[\]]", "", name_to_parse)
     # Now remove some stuff that could be left at the end
@@ -187,7 +187,6 @@ def _parse_string(name: str) -> Dict[str, Any]:
         for t in re.split(r" ?[\-+] | [\-+] ?(?!.*\[\-+])", name_to_parse)
         if t.strip().upper() not in drop_terms
     ]
-    print(titles)
 
     # If there are two titles, the episode should be the second
     if len(titles) == 2:
@@ -220,9 +219,6 @@ def _parse(path: Path) -> Dict[str, Any]:
     file_data = _parse_string(path.name)
     # Now get the data from the path
     path_data = _parse_string(path.parent.name)
-
-    print(file_data)
-    print(path_data)
 
     # lru_cache is naive and does not handle mutable objects smartly, I need to do copies myself
     # just to save situations that these get modified
