@@ -26,7 +26,7 @@ EPISODE_SEASON_REGEX = re.compile(
     r"s?(?P<season>\d+)(e|ep|sp|x)(?P<episode>\d+)", flags=re.IGNORECASE
 )
 EPISODE_REGEX = re.compile(
-    r"(\/| )e?(?P<episode>\d+)[ \.\-\/]",
+    r"(\/| )(e|ep)?(?P<episode>\d+)[ \.\-\/]",
     flags=re.IGNORECASE,
 )
 SEASON_REGEX = re.compile(r"\(?(Season| s) ?(?P<season>\d+)\)?", flags=re.IGNORECASE)
