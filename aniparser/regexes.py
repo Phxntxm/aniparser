@@ -26,7 +26,7 @@ EPISODE_SEASON_REGEX = re.compile(
     r"s?(?P<season>\d+)(e|ep|sp|x)(?P<episode>\d+)", flags=re.IGNORECASE
 )
 EPISODE_REGEX = re.compile(
-    r"(\/| )(e|ep)?(?P<episode>\d+)[ \.\-\/]",
+    r"(\/| )(e|ep|episode )?(?P<episode>\d+)[ \.\-\/]",
     flags=re.IGNORECASE,
 )
 SEASON_REGEX = re.compile(r"\(?(Season| s) ?(?P<season>\d+)\)?", flags=re.IGNORECASE)
@@ -57,5 +57,5 @@ SOURCE_TERM_REGEX = re.compile(
 )
 
 ALTERNATE_TITLE_REGEX = re.compile(
-    r"\((?P<alternate_title>[\w ]+)\)", flags=re.IGNORECASE
+    r"\((?P<alternate_title>[\w'\- ]+)\)", flags=re.IGNORECASE
 )

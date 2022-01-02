@@ -86,6 +86,6 @@ source_terms = [
     r"HDTV(RIP)*?",
     r"HDTV",
     r"TV-?RIP",
-    r"WEB(CAST|RIP)",
+    r"WEB-?(CAST|RIP)",
 ]
 drop_terms = ["", "ONA", "OVA", "END", "FINAL", "SPECIAL"]

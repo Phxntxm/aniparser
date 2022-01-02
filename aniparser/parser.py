@@ -108,9 +108,14 @@ def _parse_string(name: str) -> Dict[str, Any]:
     # This is going to be our data we modify through the function that gets returned
     data: Dict[str, Any] = {}
 
+    # Sometimes a file can have periods or underscores instead of spaces... so if there is 1 or
+    # less space, we'll replace these with spaces
+    if name_to_parse.count(" ") <= 1:
+        name_to_parse = re.sub("[._]", " ", name_to_parse)
+
     # A function to pass to re.sub, handling throwing matches we want into the data
-    # and replacing with '' to remove it
-    def replace_and_track(_group: Dict[str, str]):
+    # and replacing with the specified replacement (nothing by default)
+    def replace_and_track(_group: Dict[str, str], replacer=""):
         def inner(match: re.Match):
             for key, value in _group.items():
                 try:
@@ -122,7 +127,7 @@ def _parse_string(name: str) -> Dict[str, Any]:
                     # that we prioritize first matches, but still remove matches
                     if res and value not in data:
                         data[value] = res
-            return ""
+            return replacer
 
         return inner
 
@@ -156,17 +161,23 @@ def _parse_string(name: str) -> Dict[str, Any]:
     )
     # This could leave 'empty' brackets, so remove them
     name_to_parse = EMPTY_BRACKETS_REGEX.sub("", name_to_parse)
-    # Now do the step-two parsers
+    # Now do the step-two parsers. These are all the episode regexes
+    # there are a few common patterns used in files... episodes at the end, episodes
+    # in brackets/parenthesis... or in between the anime title and the episode title.
+    # Due to that, replace with a -, as in the first two cases it will just be "erronous"
+    # and be ignored. In the third case we can use it to logically separate the anime and episode title
     for parser_type in parsers_step_2:
         name_to_parse = parser_type["regex"].sub(
-            replace_and_track(parser_type["groups"]), name_to_parse
+            replace_and_track(parser_type["groups"], " - "), name_to_parse
         )
 
     # Strip off the preceeding / we added
     name_to_parse = re.sub("^/ *", "", name_to_parse)
     # And the trailing
     name_to_parse = re.sub(" */$", "", name_to_parse)
-    # At this point replace _ with space
+    # At this point replace _ with space. It's possible someone used JUST underscores
+    # instead of spaces... in the title only. People are weird man, there's so many
+    # different styles...
     name_to_parse = re.sub("_+", " ", name_to_parse)
     # Remove bracketed terms
     name_to_parse = re.sub(r"\[.*?\]", "", name_to_parse)
@@ -226,20 +237,26 @@ def _parse(path: Path) -> Dict[str, Any]:
     path_data = path_data.copy()
 
     # Now if there is only an anime title but not an episode title, it's possible that
-    # this is actually the episode title... and the anime title is in the folder name
+    # this is actually the episode title... and the anime title is in the folder name.
+    # IE: "/home/user/Anime/[HorribleSubs] Naruto/[HorribleSubs] Enter: Naruto Uzumaki! - 01 [720p].mkv"
     if "anime_title" in file_data and "episode_title" not in file_data:
         # If we have the anime title, and the alternate title... then it's likely that this is
         # just correct as is and we don't want to do anything extra
         if "alternate_title" not in file_data:
             # Special check to handle common folder names that might be general
             # containers that we want to ignore
-            if path_data and path_data["anime_title"].lower() not in [
-                "anime",
-                "videos",
-                "torrents",
-                "downloads",
-                "documents",
-            ]:
+            if (
+                path_data
+                and "anime_title" in path_data
+                and path_data["anime_title"].lower()
+                not in [
+                    "anime",
+                    "videos",
+                    "torrents",
+                    "downloads",
+                    "documents",
+                ]
+            ):
                 # Now check if they differ, if they do combine
                 if (
                     fuzz.ratio(
@@ -268,7 +285,7 @@ def _parse(path: Path) -> Dict[str, Any]:
     )
 
     # Now just to make sure the alternate title and main title aren't the same
-    if data.get("alternate_title") == data["anime_title"]:
+    if data.get("alternate_title") == data.get("anime_title"):
         data.pop("alternate_title", None)
 
     return data
